@@ -1,57 +1,49 @@
 /*
-* The familytree subsystem is supposed to be a way to
-* assist RP by setting people up as related roundstart.
-* This relation can be based on role (IE king and prince
-* being father and son) or random chance.
+* The familytree subsystem is supposed to be a way to assist RP by setting people up as related roundstart.
+* This relation can be based on role (IE king and prince being father and son) or random chance.
 */
+
 /*
-* NOTES: There is some areas of this
-* subsystem that can be more fleshed out
-* such as how right now a house is just
-* a bunch of names. Potentially this system
-* can be used to create family curses/boons that
-* effect all family members.
-* There is also a additional variable i placed
-* in human.dna called parent_mix that could be
-* used for intrigue but currently it has
-* no use and is only changed by the
-* heritage datum BloodTies() proc.`
+* NOTES: There is some areas of this subsystem that can be more fleshed out, such as how right now a house is just a bunch of names.
+* Potentially this system can be used to create family curses/boons that effect all family members.
+* There is also a additional variable I placed in human.dna called parent_mix that could be used for intrigue but currently it has no use and is only changed by the heritage datum BloodTies() proc.
 */
+
 SUBSYSTEM_DEF(familytree)
 	name = "familytree"
 	flags = SS_NO_FIRE
 	lazy_load = FALSE
 
-	/*
-	* The family that kings, queens, and princes
-	* are automatically placed into. Has no other
-	* real function.
-	*/
+	// The family that kings, queens, and princes are automatically placed into. Has no other real function.
 	var/datum/heritage/ruling_family
-	/*
-	* The other major houses of Rockhill.
-	* Id say think Shrouded Isle families but
-	* smaller.
-	*/
+
+	// The family that the Inkeeper and their child are automatically placed into. Has no other real function.
+	var/datum/heritage/innkeeper_family
+	// The other major houses of Rockhill. Id say think Shrouded Isle families but smaller.
 	var/list/families = list()
-	/*
-	* Bachalors and Bachalorettes
-	*/
+
+	// Bachelors and Bachelorettes
 	var/list/viable_spouses = list()
-	//These jobs are excluded from AddLocal()
-	var/excluded_jobs = list(
-		"Prince",
-		"Princess",
-		"Consort",
-		"Monarch",
-		"Hand",
+	//These jobs have no family, how sad
+	var/no_family_jobs = list(
 		"Inquisitor",
 		"Adept",
 		"Jailor",
 		"Orphan",
-		"Innkeepers Son",
 		"Churchling"
 		)
+	//These jobs force you to be in a specific family
+	var/forced_family_jobs = list(
+		"Prince" = ruling_family,
+		"Princess" = ruling_family,
+		"Consort" = ruling_family,
+		"Monarch" = ruling_family
+		"Hand" = ruling_family
+		"Innkeeper" = innkeeper_family
+		"Innkeeper's Son" = innkeeper_family
+	)
+
+
 	//This creates 2 families for each race roundstart so that siblings dont fail to be added to a family.
 	var/list/preset_family_species = list(
 		/datum/species/human/northern,
@@ -60,7 +52,7 @@ SUBSYSTEM_DEF(familytree)
 		/datum/species/human/halfelf,
 		/datum/species/dwarf/mountain,
 		/datum/species/tieberian,
-		/datum/species/aasimar,
+		// /datum/species/aasimar, //Aasimar are constructs, they don't have blood family
 		/datum/species/rakshari,
 		/datum/species/halforc
 		)
@@ -74,15 +66,13 @@ SUBSYSTEM_DEF(familytree)
 
 	return ..()
 
-/*
-* In order for us to use age in sorting of generations we would need to
-* make the king & queen older than the prince.
-*/
+// In order for us to use age in sorting of generations we would need to make the king & queen older than the prince.
+
 /datum/controller/subsystem/familytree/proc/AddLocal(mob/living/carbon/human/H, status)
 	if(!H || !status || istype(H, /mob/living/carbon/human/dummy))
 		return
 	//Exclude princes and princesses from having their parentage calculated.
-	if(H.job in excluded_jobs)
+	if(H.job in no_family_jobs)
 		return
 	switch(status)
 		if(FAMILY_PARTIAL)
@@ -118,8 +108,7 @@ SUBSYSTEM_DEF(familytree)
 	ruling_family.addToHouse(H, status)
 
 /*
-* Assigns people randomly as heirs to one of the major
-* famlies of Rockhill based on their species.
+* Assigns people randomly as heirs to one of the major famlies of Rockhill based on their species.
 */
 /datum/controller/subsystem/familytree/proc/AssignToHouse(mob/living/carbon/human/H)
 	//If no human and they are older than adult age.
@@ -164,11 +153,8 @@ SUBSYSTEM_DEF(familytree)
 		chosen_house.addToHouse(H, adopted ? FAMILY_ADOPTED : FAMILY_PROGENY)
 
 /*
-* Allows players to claim a
-* house as patriarch or matriarch.
-* Currently roundstart families are
-* male and female since it makes
-* species calulcation easier on me.
+* Allows players to claim a house as patriarch or matriarch.
+* Currently roundstart families are male and female since it makes species calulcation easier on me.
 */
 /datum/controller/subsystem/familytree/proc/AssignToFamily(mob/living/carbon/human/H)
 	if(!H)
@@ -342,8 +328,7 @@ SUBSYSTEM_DEF(familytree)
 		chosen_house.addToHouse(H, inlaw ?  FAMILY_INLAW : FAMILY_OMMER)
 
 /*
-* For admins to view EVERY FAMILY and see all the
-* akward and convoluted coding.
+* For admins to view EVERY FAMILY and see all the awkward and convoluted coding.
 */
 /datum/controller/subsystem/familytree/proc/ReturnAllFamilies()
 	. = ""
